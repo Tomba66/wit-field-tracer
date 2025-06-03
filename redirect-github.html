@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Workday Redirect</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const error = params.get("error");
+
+      if (code) {
+        // Send the code back to the opener (main window)
+        window.opener?.postMessage({ type: "oauth-code", code }, "*");
+      } else if (error) {
+        window.opener?.postMessage({ type: "oauth-error", error }, "*");
+      }
+
+      // Close the popup window
+      window.close();
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
+
