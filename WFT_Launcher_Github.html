@@ -159,9 +159,7 @@ const res = await fetch(proxiedUrl, {
 const res = await fetch(env.launchUrl, {
   method: "POST",
   headers: {
-    Authorization: `Bearer ${accessToken}`,
-    "X-Tenant": "idmcompanies_preview", 
-    "Content-Type": "application/x-www-form-urlencoded"
+    "Content-Type": "text/plain"
   }
 });
 
