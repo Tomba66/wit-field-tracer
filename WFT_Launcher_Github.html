@@ -145,7 +145,7 @@
       updateStatus("🚀 Launching integration...");
 
       try {
-const proxiedUrl = `https://corsproxy.io/?https://e2-impl-cci.workday.com/ccx/cc-cloud-repo/collections/Test_Date/Test_Date/StartHere`;
+const proxiedUrl = `https://cors-anywhere.herokuapp.com/https://e2-impl-cci.workday.com/ccx/cc-cloud-repo/collections/Test_Date/Test_Date/StartHere`;
 const res = await fetch(proxiedUrl, {
   method: "POST",
   headers: {
