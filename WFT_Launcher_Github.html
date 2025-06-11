@@ -148,8 +148,8 @@
         const res = await fetch(env.launchUrl, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "X-Tenant": selectedEnv.toLowerCase(),
+            "Authorization": `Bearer ${accessToken}`,
+            "Access-Control-Allow-Origin": "*",
             "Content-Type": "text/plain"
           }
         });
