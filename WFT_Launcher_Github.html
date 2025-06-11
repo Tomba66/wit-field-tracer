@@ -157,6 +157,7 @@ const res = await fetch(proxiedUrl, {
 });
 */
 const res = await fetch(env.launchUrl, {
+  mode: "no-cors",
   method: "POST",
   headers: {
     Authorization: `Bearer ${accessToken}`,
