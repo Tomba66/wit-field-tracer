@@ -145,14 +145,14 @@
       updateStatus("🚀 Launching integration...");
 
       try {
-        const res = await fetch(env.launchUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Access-Control-Allow-Origin": "https://tomba66.github.io",
-            "Content-Type": "text/plain"
-          }
-        });
+const res = await fetch(env.launchUrl, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    "X-Tenant": "idmcompanies_preview", 
+    "Content-Type": "text/plain"
+  }
+});
 
         const result = await res.json();
         const procId = result?.id || result?.event?.id || null;
