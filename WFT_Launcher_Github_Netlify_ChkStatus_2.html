@@ -212,7 +212,7 @@ async function launchIntegration() {
 }
 
 // === Manual Integration Status Check (via Refresh Button) ===
-function setupStatusRefresh(eventWID, accessToken) {
+function monitorIntegrationStatus(eventWID, accessToken) {
   const refreshBtn = document.getElementById("refreshBtn");
   refreshBtn.classList.remove("hidden");
 
