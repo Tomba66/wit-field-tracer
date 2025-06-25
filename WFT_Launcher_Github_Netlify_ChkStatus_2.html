@@ -27,6 +27,9 @@
       border-radius: 5px;
       min-height: 2rem;
     }
+	.hidden {
+	  display: none;
+	}
   </style>
 </head>
 <body>
@@ -43,6 +46,7 @@
 
   <button id="loginBtn">🔐 Log In</button>
   <button id="launchBtn" disabled>📤 Launch Integration</button>
+  <button id="refreshBtn" class="hidden">🔄 Refresh Status</button>
 
   <div id="status">Not authenticated</div>
 
@@ -207,35 +211,35 @@ async function launchIntegration() {
 }
 }
 
-async function monitorIntegrationStatus(eventWID, accessToken) {
-  const soapBody = `
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bsvc="urn:com.workday/bsvc">
-      <soapenv:Header>
-        <bsvc:Workday_Common_Header>
-          <bsvc:Include_Reference_Descriptors_In_Response>1</bsvc:Include_Reference_Descriptors_In_Response>
-        </bsvc:Workday_Common_Header>
-      </soapenv:Header>
-      <soapenv:Body>
-        <bsvc:Get_Event_Details_Request bsvc:version="v44.1">
-          <bsvc:Request_References>
-            <bsvc:Event_Reference>
-              <bsvc:ID bsvc:type="WID">${eventWID}</bsvc:ID>
-            </bsvc:Event_Reference>
-          </bsvc:Request_References>
-        </bsvc:Get_Event_Details_Request>
-      </soapenv:Body>
-    </soapenv:Envelope>
-  `.trim();
+// === Manual Integration Status Check (via Refresh Button) ===
+function setupStatusRefresh(eventWID, accessToken) {
+  const refreshBtn = document.getElementById("refreshBtn");
+  refreshBtn.classList.remove("hidden");
 
-  const proxyUrl = "https://workday-cors-proxy.netlify.app/.netlify/functions/proxy";
-  const soapUrl = "https://wd2-impl-services1.workday.com/ccx/service/idmcompanies_preview/Integrations/v44.1";
+  refreshBtn.onclick = async () => {
+    updateStatus("🔍 Checking integration status...");
 
-  let attempt = 0;
-  const maxAttempts = 10;
+    const soapBody = `
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bsvc="urn:com.workday/bsvc">
+        <soapenv:Header>
+          <bsvc:Workday_Common_Header>
+            <bsvc:Include_Reference_Descriptors_In_Response>1</bsvc:Include_Reference_Descriptors_In_Response>
+          </bsvc:Workday_Common_Header>
+        </soapenv:Header>
+        <soapenv:Body>
+          <bsvc:Get_Event_Details_Request bsvc:version="v44.1">
+            <bsvc:Request_References>
+              <bsvc:Event_Reference>
+                <bsvc:ID bsvc:type="WID">${eventWID}</bsvc:ID>
+              </bsvc:Event_Reference>
+            </bsvc:Request_References>
+          </bsvc:Get_Event_Details_Request>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `.trim();
 
-  const intervalId = setInterval(async () => {
-    attempt++;
-    updateStatus(`🔄 Checking status (Attempt ${attempt})...`);
+    const proxyUrl = "https://workday-cors-proxy.netlify.app/.netlify/functions/proxy";
+    const soapUrl = "https://wd2-impl-services1.workday.com/ccx/service/idmcompanies_preview/Integrations/v44.1";
 
     const proxyRequest = {
       targetUrl: soapUrl,
@@ -250,37 +254,39 @@ async function monitorIntegrationStatus(eventWID, accessToken) {
     try {
       const res = await fetch(proxyUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(proxyRequest)
       });
 
       const text = await res.text();
       const xml = new DOMParser().parseFromString(text, "application/xml");
-      const status = xml.querySelector("wd\\:Event_State_Reference")?.getAttribute("wd:Descriptor");
 
-      if (status) {
-        updateStatus(`📄 Integration Status: ${status}`);
-        if (status.toLowerCase() === "completed" || status.toLowerCase() === "canceled" || status.toLowerCase() === "failed") {
-          clearInterval(intervalId);
-        }
-      } else {
-        updateStatus(`❓ Could not determine integration status (Attempt ${attempt})`);
-      }
+      const nsResolver = prefix => {
+        const ns = {
+          wd: "urn:com.workday/bsvc",
+          env: "http://schemas.xmlsoap.org/soap/envelope/"
+        };
+        return ns[prefix] || null;
+      };
 
-      if (attempt >= maxAttempts) {
-        clearInterval(intervalId);
-        updateStatus("⚠️ Stopped monitoring after maximum attempts.");
-      }
+      const statusNode = xml.evaluate(
+        "//wd:Event_State_Reference/@wd:Descriptor",
+        xml,
+        nsResolver,
+        XPathResult.STRING_TYPE,
+        null
+      );
+
+      const status = statusNode.stringValue || "Unknown";
+      updateStatus(`📄 Integration Status: ${status}`);
 
     } catch (err) {
-      console.error("SOAP status check failed:", err);
-      updateStatus("❌ Failed to check integration status.");
-      clearInterval(intervalId);
+      console.error("❌ Status check failed:", err);
+      updateStatus("❌ Failed to retrieve status.");
     }
-  }, 30000); // every 30 seconds
+  };
 }
+
 
 
     // === Step 5: Download Deliverable ===
