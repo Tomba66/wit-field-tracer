@@ -199,7 +199,7 @@ async function launchIntegration() {
   }
 
   updateStatus("🚀 Integration launched. Monitoring status...");
-  monitorIntegrationStatus(eventRef);  // Call your monitoring logic here
+  monitorIntegrationStatus(eventRef, accessToken);  // Call your monitoring logic here
 
 } catch (err) {
   updateStatus("❌ Network error during launch.");
@@ -207,7 +207,7 @@ async function launchIntegration() {
 }
 }
 
-async function monitorIntegrationStatus(eventWID, accessToken, envKey) {
+async function monitorIntegrationStatus(eventWID, accessToken) {
   const soapBody = `
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bsvc="urn:com.workday/bsvc">
       <soapenv:Header>
