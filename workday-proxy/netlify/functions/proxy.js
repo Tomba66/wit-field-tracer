@@ -29,7 +29,7 @@ export default async function handler(request, context) {
 
     console.info("[Proxy] Workday responded with:");
     console.info("Status:", forwardResponse.status);
-    console.info("Body:", text.slice(0, 1000)); // Limit to first 1000 characters to avoid overflow
+    console.info("Body:", text.slice(0, 2000)); // Limit to first 1000 characters to avoid overflow
 
     return new Response(text, {
       status: forwardResponse.status,
