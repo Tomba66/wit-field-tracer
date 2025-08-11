@@ -390,14 +390,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition");
-      const fileName = disposition?.split("filename=")[1]?.replace(/['"]/g, "") || "download.html";
+	  let fileName = getFilenameFromDisposition(disposition) || "download.html";
 
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+	  a.href = URL.createObjectURL(blob);
+	  a.download = fileName;
+	  document.body.appendChild(a);
+	  a.click();
+	  document.body.removeChild(a);
 
       updateStatus("✅ File downloaded successfully.");
 
@@ -406,6 +406,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function getFilenameFromDisposition(disposition) {
+	  if (!disposition) return null;
+	
+	  // 1️⃣ Try quoted filename first → filename="Workday Field Tracer.html"
+	  const matchQuoted = disposition.match(/filename="([^"]+)"/);
+	  if (matchQuoted && matchQuoted[1]) {
+	    return matchQuoted[1];
+	  }
+	
+	  // 2️⃣ Try unquoted filename → filename=Workday_Field_Tracer.html
+	  const matchUnquoted = disposition.match(/filename=([^;]+)/);
+	  if (matchUnquoted && matchUnquoted[1]) {
+	    return matchUnquoted[1].trim();
+	  }
+	
+	  // 3️⃣ Try UTF-8 encoded form → filename*=UTF-8''Workday%20Field%20Tracer.html
+	  const matchUtf8 = disposition.match(/filename\*\=UTF-8''(.+)/i);
+	  if (matchUtf8 && matchUtf8[1]) {
+	    try {
+	      return decodeURIComponent(matchUtf8[1]);
+	    } catch {
+	      return matchUtf8[1]; // fallback raw
+	    }
+	  }
+	
+	  // 4️⃣ No match → return null
+	  return null;
+  }
+	
   loginBtn.addEventListener("click", startOAuthLogin);
   launchBtn.addEventListener("click", launchIntegration);
 
