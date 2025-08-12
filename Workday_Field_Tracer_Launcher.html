@@ -391,6 +391,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition");
 		console.log("Response header: ", res.headers);
+		console.log("Content-Disposition: ", disposition);
 	  let fileName = getFilenameFromDisposition(disposition) || "download.html";
 
       const a = document.createElement("a");
