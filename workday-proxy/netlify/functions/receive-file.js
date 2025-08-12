@@ -3,7 +3,8 @@ export default async (req, ctx) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Methods": "*"
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Expose-Headers": "Content-Disposition"
   };
 
   // Handle preflight CORS
@@ -105,3 +106,4 @@ export default async (req, ctx) => {
     }
   );
 };
+
