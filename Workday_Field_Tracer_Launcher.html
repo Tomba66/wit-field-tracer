@@ -389,9 +389,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
 
       const blob = await res.blob();
-      const disposition = res.headers.get("Content-Disposition");
-		console.log("Response header: ", res.headers);
-		console.log("Content-Disposition: ", disposition);
+      const disposition = res.headers.get("Content-Disposition");		
 	  let fileName = getFilenameFromDisposition(disposition) || "download.html";
 
       const a = document.createElement("a");
@@ -410,39 +408,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getFilenameFromDisposition(disposition) {
 	  if (!disposition) {
-		  console.log("Disposition not found: ", disposition);
-		  return null;
+		return null;
 	  }
 	
-	  // 1️⃣ Try quoted filename first → filename="Workday Field Tracer.html"
+	  // Get filename
 	  const matchQuoted = disposition.match(/filename="([^"]+)"/);
 	  console.log("Match Quoted Filename: ", matchQuoted);
 	  if (matchQuoted && matchQuoted[1]) {
 		console.log("Matchquoted array #1 element found", matchQuoted[1]);
 	    return matchQuoted[1];
 	  }
-	
-	  // 2️⃣ Try unquoted filename → filename=Workday_Field_Tracer.html
-	  const matchUnquoted = disposition.match(/filename=([^;]+)/);
-	  console.log("Match Unquoted Filename: ", matchUnquoted);
-	  if (matchUnquoted && matchUnquoted[1]) {
-		  console.log("MatchUNQuoted array #1 element found", matchUnquoted[1]);
-	    return matchUnquoted[1].trim();
-	  }
-	
-	  // 3️⃣ Try UTF-8 encoded form → filename*=UTF-8''Workday%20Field%20Tracer.html
-	  const matchUtf8 = disposition.match(/filename\*\=UTF-8''(.+)/i);
-	  console.log("Match UTF8 Filename: ", matchUtf8);
-	  if (matchUtf8 && matchUtf8[1]) {
-	    try {
-			console.log("matchUtf8 array #1 element found", matchUtf8[1]);
-	      return decodeURIComponent(matchUtf8[1]);
-	    } catch {
-	      return matchUtf8[1]; // fallback raw
-	    }
-	  }
-	
-	  // 4️⃣ No match → return null
+
+	  // No match → return null
 	  return null;
   }
 	
