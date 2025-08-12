@@ -3,8 +3,8 @@ export default async (req, ctx) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Expose-Headers": "Content-Disposition"
+    "Access-Control-Allow-Methods": "*"
+	  "Access-Control-Expose-Headers": "Content-Disposition"
   };
 
   // Handle preflight CORS
@@ -17,10 +17,7 @@ export default async (req, ctx) => {
     try {
       const raw = await req.arrayBuffer();
       const file = new Uint8Array(raw);
-      const fileNameHeader = req.headers.get("x-file-name");
-      
-      // Ensure filename is present and cleaned
-      const fileName = fileNameHeader ? fileNameHeader.trim() : "output.html";
+      const fileName = req.headers.get("x-file-name") || "output.html";
 
       const fileId = Date.now().toString();
 
@@ -79,17 +76,12 @@ export default async (req, ctx) => {
       );
     }
 
-    // Properly encode filename for Content-Disposition
-    const encodedFileName = encodeURIComponent(latest.fileName);
-    const safeQuotedFileName = latest.fileName.replace(/"/g, '\\"');
-
     return new Response(latest.buffer, {
       status: 200,
       headers: {
         ...headers,
         "Content-Type": "application/octet-stream",
-        // RFC 6266 + RFC 5987 for compatibility
-        "Content-Disposition": `attachment; filename="${safeQuotedFileName}"; filename*=UTF-8''${encodedFileName}`
+        "Content-Disposition": `attachment; filename="${latest.fileName}"`
       }
     });
   }
@@ -106,4 +98,3 @@ export default async (req, ctx) => {
     }
   );
 };
-
