@@ -4,7 +4,7 @@ export default async (req, ctx) => {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "*",
     "Access-Control-Allow-Methods": "*",
-	"Access-Control-Expose-Headers": "Content-Disposition"
+    "Access-Control-Expose-Headers": "Content-Disposition, X-File-Name, Content-Length"
   };
 
   // Handle preflight CORS
@@ -81,7 +81,8 @@ export default async (req, ctx) => {
       headers: {
         ...headers,
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${latest.fileName}"`
+        "Content-Disposition": `attachment; filename="${latest.fileName}"`,
+        "X-File-Name": latest.fileName
       }
     });
   }
@@ -98,4 +99,3 @@ export default async (req, ctx) => {
     }
   );
 };
-
