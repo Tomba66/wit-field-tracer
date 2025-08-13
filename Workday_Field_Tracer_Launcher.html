@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
       updateStatus(`📄 Integration Status: ${status}`);
 
       // Stop polling if status is not "Processing"
-      if (status.toLowerCase() !== "processing") {
+      if (status.toLowerCase() !== "in progress") {
         clearInterval(autoCheckInterval);
 
         if (status.toLowerCase() === "successfully completed") {
