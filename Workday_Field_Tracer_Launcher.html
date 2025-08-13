@@ -323,62 +323,112 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function monitorIntegrationStatus(eventWID, accessToken) {
-    const env = config.environments[selectedEnv];
-    refreshBtn.classList.remove("hidden");
+ function monitorIntegrationStatus(eventWID, accessToken) {
+  const refreshBtn = document.getElementById("refreshBtn");
+  const selectedEnv = document.getElementById("envSelect").value;
+  const env = config.environments[selectedEnv];
 
-    refreshBtn.onclick = async () => {
-      updateStatus("🔍 Checking integration status...");
+  let autoCheckInterval = null;
 
-      const soapBody = `
-        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bsvc="urn:com.workday/bsvc">
-          <soapenv:Header>
-            <bsvc:Workday_Common_Header>
-              <bsvc:Include_Reference_Descriptors_In_Response>1</bsvc:Include_Reference_Descriptors_In_Response>
-            </bsvc:Workday_Common_Header>
-          </soapenv:Header>
-          <soapenv:Body>
-            <bsvc:Get_Event_Details_Request bsvc:version="v44.1">
-              <bsvc:Request_References>
-                <bsvc:Event_Reference>
-                  <bsvc:ID bsvc:type="WID">${eventWID}</bsvc:ID>
-                </bsvc:Event_Reference>
-              </bsvc:Request_References>
-            </bsvc:Get_Event_Details_Request>
-          </soapenv:Body>
-        </soapenv:Envelope>
-      `.trim();
+  refreshBtn.classList.remove("hidden");
 
-      try {
-        const res = await fetch(config.proxyUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            targetUrl: env.soapUrl,
-            method: "POST",
-            headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "text/xml" },
-            body: soapBody
-          })
-        });
+  async function checkStatusAndMaybeDownload() {
+    updateStatus("🔍 Checking integration status...");
 
-        const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-        const status = xml.evaluate("//wd:Event_State_Reference/@wd:Descriptor", xml, prefix => {
-          const ns = { wd: "urn:com.workday/bsvc" };
-          return ns[prefix] || null;
-        }, XPathResult.STRING_TYPE, null).stringValue;
+    const soapBody = `
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bsvc="urn:com.workday/bsvc">
+        <soapenv:Header>
+          <bsvc:Workday_Common_Header>
+            <bsvc:Include_Reference_Descriptors_In_Response>1</bsvc:Include_Reference_Descriptors_In_Response>
+          </bsvc:Workday_Common_Header>
+        </soapenv:Header>
+        <soapenv:Body>
+          <bsvc:Get_Event_Details_Request bsvc:version="v44.1">
+            <bsvc:Request_References>
+              <bsvc:Event_Reference>
+                <bsvc:ID bsvc:type="WID">${eventWID}</bsvc:ID>
+              </bsvc:Event_Reference>
+            </bsvc:Request_References>
+          </bsvc:Get_Event_Details_Request>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `.trim();
 
-        updateStatus(`📄 Integration Status: ${status}`);
+    const proxyRequest = {
+      targetUrl: env.soapUrl,
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "text/xml"
+      },
+      body: soapBody
+    };
+
+    try {
+      const res = await fetch(config.proxyUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(proxyRequest)
+      });
+
+      if (!res.ok) {
+        updateStatus(`❌ Status check failed: HTTP ${res.status}`);
+        clearInterval(autoCheckInterval);
+        return;
+      }
+
+      const text = await res.text();
+      const xml = new DOMParser().parseFromString(text, "application/xml");
+
+      const nsResolver = prefix => {
+        const ns = {
+          wd: "urn:com.workday/bsvc",
+          env: "http://schemas.xmlsoap.org/soap/envelope/"
+        };
+        return ns[prefix] || null;
+      };
+
+      const statusNode = xml.evaluate(
+        "//wd:Event_State_Reference/@wd:Descriptor",
+        xml,
+        nsResolver,
+        XPathResult.STRING_TYPE,
+        null
+      );
+
+      const status = statusNode.stringValue || "Unknown";
+      updateStatus(`📄 Integration Status: ${status}`);
+
+      // Stop polling if status is not "Processing"
+      if (status.toLowerCase() !== "processing") {
+        clearInterval(autoCheckInterval);
 
         if (status.toLowerCase() === "successfully completed") {
           updateStatus("✅ Integration completed. Downloading file...");
-          await downloadDeliveredFile();
+          try {
+            await downloadDeliveredFile();
+          } catch (err) {
+            updateStatus("❌ File download failed.");
+            console.error(err);
+          }
+        } else {
+          updateStatus(`⚠ Integration stopped with status: ${status}`);
         }
-
-      } catch {
-        updateStatus("❌ Failed to retrieve status.");
       }
-    };
+
+    } catch (err) {
+      console.error("❌ Status check failed:", err);
+      updateStatus("❌ Failed to retrieve status.");
+      clearInterval(autoCheckInterval); // Stop polling on fatal error
+    }
   }
+
+  // Manual refresh button
+  refreshBtn.onclick = checkStatusAndMaybeDownload;
+
+  // Auto-check every 30 seconds until integration stops or fails
+  autoCheckInterval = setInterval(checkStatusAndMaybeDownload, 30000);
+}
 
   async function downloadDeliveredFile() {
     try {
