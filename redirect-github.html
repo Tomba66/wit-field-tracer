@@ -11,9 +11,9 @@
 
       if (code) {
         // Send the code back to the opener (main window)
-        window.opener?.postMessage({ type: "oauth-code", code }, "*");
+        window.opener?.postMessage({ type: "oauth-code", code }, "https://tomba66.github.io");
       } else if (error) {
-        window.opener?.postMessage({ type: "oauth-error", error }, "*");
+        window.opener?.postMessage({ type: "oauth-error", error }, "https://tomba66.github.io");
       }
 
       // Close the popup window
@@ -25,4 +25,5 @@
   <p>Redirecting...</p>
 </body>
 </html>
+
 
