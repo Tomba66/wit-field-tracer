@@ -1,10 +1,10 @@
 // Netlify function for receiving and serving the Workday deliverable
 export default async (req, ctx) => {
   const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Expose-Headers": "Content-Disposition, X-File-Name, Content-Length"
+    "Access-Control-Allow-Origin": "https://tomba66.github.io",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Expose-Headers": "Content-Disposition, X-File-Name"
   };
 
   // Handle preflight CORS
@@ -99,3 +99,4 @@ export default async (req, ctx) => {
     }
   );
 };
+
