@@ -4,9 +4,9 @@ export default async function handler(request, context) {
       return new Response(null, {
         status: 200,
         headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "*",
-          "Access-Control-Allow-Methods": "*"
+          "Access-Control-Allow-Origin": "https://tomba66.github.io",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
         }
       });
     }
@@ -23,7 +23,7 @@ export default async function handler(request, context) {
     return new Response(text, {
       status: forwardResponse.status,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://tomba66.github.io",
         "Content-Type": "application/xml"
       }
     });
@@ -33,10 +33,11 @@ export default async function handler(request, context) {
     return new Response("Proxy error: " + err.message, {
       status: 500,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://tomba66.github.io",
         "Content-Type": "text/plain"
       }
     });
   }
 }
+
 
