@@ -243,7 +243,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const authUrl = `${env.authEndpoint}?response_type=code&client_id=${encodeURIComponent(env.clientId)}&redirect_uri=${encodeURIComponent(config.redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
 
-    window.open(authUrl, "_blank", "width=600,height=700");
+    //window.open(authUrl, "_blank", "width=600,height=700");
+	  window.open(authUrl, "_blank", "width=450,height=535,top=35,left=300");
   }
 
   async function exchangeToken(code) {
